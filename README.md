@@ -10,6 +10,8 @@ might find this extension useful if you need to validate JSON against a schema. 
 
 📋 Enjoy detailed error messages identifying exactly how a document fails validation!
 
+For more on using this extension, read the article at [www.jasonthorsness.com/14](www.jasonthorsness.com/14)
+
 ## Installation
 
 Install or upgrade `s2valijson` on SingleStore 8.5 or higher with the following SQL. This method of installation
@@ -73,10 +75,12 @@ INSERT INTO tbl VALUES
 ('{"a":"foo"}'),
 ('{"a":"zzz","b":1}');
 
--- schemas
-CREATE TABLE sch(id BIGINT NOT NULL PRIMARY KEY, col JSON COLLATE utf8mb4_bin NOT NULL);
-INSERT INTO sch VALUES
-(1, '
+-- schema as udf for convenience
+DELIMITER //
+CREATE OR REPLACE FUNCTION json_schema_v1()
+RETURNS LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL AS
+BEGIN
+    RETURN '
 {
   "type": "object",
   "properties": {
@@ -90,7 +94,9 @@ INSERT INTO sch VALUES
   },
   "required": [ "a"]
 }
-')
+';
+END //
+DELIMITER ;
 ```
 
 ### `s2valijson_validate_json`
@@ -101,7 +107,7 @@ INSERT INTO sch VALUES
 Example:
 
 ```sql
-SELECT col FROM tbl WHERE s2valijson_validate_json(col, (SELECT col FROM sch WHERE id = 1));
+SELECT col FROM tbl WHERE s2valijson_validate_json(col, json_schema_v1());
 
 -- {"a":"foo","b":"bar"}
 -- {"a":"foo"}
@@ -119,7 +125,7 @@ Examples:
 WITH row AS (SELECT * FROM TABLE([
   s2valijson_validate_json_raise(
     '{"a":"yyy"}',
-    (SELECT col FROM sch WHERE id = 1))
+    json_schema_v1())
 ]))
 INSERT INTO tbl SELECT * FROM row;
 
@@ -134,7 +140,7 @@ INSERT INTO tbl SELECT * FROM row;
 WITH row AS (SELECT * FROM TABLE([
   s2valijson_validate_json_raise(
     '{"a":"baz", "t":true}',
-    (SELECT col FROM sch WHERE id = 1))
+    json_schema_v1())
 ]))
 INSERT INTO tbl SELECT * FROM row;
 
@@ -150,7 +156,7 @@ Examples:
 
 ```sql
 -- return errors for each row
-SELECT col, s2valijson_validate_json_errors(col, (SELECT col FROM sch WHERE id = 1)) FROM tbl;
+SELECT col, s2valijson_validate_json_errors(col, json_schema_v1()) FROM tbl;
 ```
 
 ```text
