@@ -10,7 +10,7 @@ might find this extension useful if you need to validate JSON against a schema. 
 
 📋 Enjoy detailed error messages identifying exactly how a document fails validation!
 
-For more on using this extension, read the article at [www.jasonthorsness.com/14](www.jasonthorsness.com/14)
+For more on using this extension, read the article at [www.jasonthorsness.com/14](https://www.jasonthorsness.com/14)
 
 ## Installation
 
